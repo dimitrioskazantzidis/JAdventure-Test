@@ -1,6 +1,9 @@
 package com.jadventure.game.prompts;
 
 import com.jadventure.game.entities.Player;
+import com.jadventure.game.navigation.Coordinate;
+import com.jadventure.game.navigation.ILocation;
+import com.jadventure.game.navigation.LocationManager;
 import com.jadventure.game.prompts.BackpackDebugPrompt;
 import com.jadventure.game.QueueProvider;
 
@@ -17,8 +20,9 @@ public class DebugPrompt{
                               "armour: Modify player's armour\n"+
                               "level: modify player's level\n"+
                               "gold: modify player's gold\n"+
+                              "teleport: moves the player to the co-ordinates entered\n"+
                               "backpack: Modify the player backpack\n"+
-                              "stats: Display the current stats\n"+
+                              "vs: Display the current stats\n"+
                               "help: Prints this info\n"+
                               "exit: Exits the debug prompt\n";
     
@@ -69,11 +73,21 @@ public class DebugPrompt{
                 if(newVal < 0)
                     throw new IllegalArgumentException();
                 player.setGold(newVal);
+            } else if(command.startsWith("teleport")){
+                ILocation newLocation = LocationManager.getLocation(new Coordinate(command.substring(8, command.length())));
+                ILocation oldLocation = player.getLocation();
+                try {
+                    player.setLocation(newLocation);
+                    player.getLocation().print();
+                } catch (NullPointerException e) {
+                    player.setLocation(oldLocation);
+                    QueueProvider.offer("There is no such location");
+                }
             }
 		    else if(command.equals("backpack")){
-                new BackpackDebugPrompt(player);
+                        new BackpackDebugPrompt(player);
 		    }
-		    else if(command.equals("stats"))
+		    else if(command.equals("vs"))
 			    player.getStats();
             else if(command.equals("help"))
                 QueueProvider.offer(helpText);

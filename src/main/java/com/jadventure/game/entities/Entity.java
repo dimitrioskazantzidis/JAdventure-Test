@@ -11,22 +11,21 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 /**
  * superclass for all entities (includes player, monsters...)
  */
 public abstract class Entity {
     
-    // All entities can attack, have health, have names...?
+    // All entities can attack, have health, have names
     private int healthMax;
     private int health;
     private String name;
     private String className;
     private String intro;
-    // levelMult is used to add a multiplier to the attack damage
-    // soemcdnguy4 asks: Where in code is levelMult?
     private int level;
-    // stats
+    // Statstics
     private int strength;
     private int intelligence;
     private int dexterity;
@@ -35,14 +34,41 @@ public abstract class Entity {
     private int gold;
     private double damage = 30;
     private double critChance = 0.0;
-    // Every point in armour reduces an attackers attack by .33
     private int armour;
     private String weapon = "empty";
     private HashMap<String, Item> equipment;
+    public HashMap<String, Integer> classStats = new HashMap<String, Integer>() {
+        {
+            put("Recruit", 0);
+            put("Sewer Rat", 0);
+        };
+    };
+    private String currentClassName;
     protected Storage storage;
     Random globalRand = new Random();
+
+    public String getCurrentClass() {
+        return this.currentClassName;
+    }
+
+    public void setCurrentClass(String className) {
+        this.currentClassName = className;
+    }
+
+    public void checkCurrentClass() {
+        Iterator it = this.classStats.entrySet().iterator();
+        int highestClassLevel = 0;
+        String highestClassName = "";
+        while (it.hasNext()) {
+            Map.Entry<String, Integer> pairs = (Map.Entry<String, Integer>)it.next();
+            if (pairs.getValue() > highestClassLevel) {
+                highestClassLevel = pairs.getValue();
+                highestClassName = pairs.getKey();
+            }
+        }
+        this.currentClassName = highestClassName;
+    }
     
-    // maybe not all entities start at full health, etc.
     public Entity() {
         this.healthMax = 100;
         this.health = this.healthMax;
@@ -63,10 +89,12 @@ public abstract class Entity {
     public int getHealth() {
         return this.health;
     }
-        
 
     public void setHealth(int health) {
         this.health = health;
+        if (health > healthMax) {
+            health = healthMax;
+        }
     }
 
     public int getGold() {
@@ -107,6 +135,9 @@ public abstract class Entity {
 
     public void setHealthMax(int healthMax) {
         this.healthMax = healthMax;
+        if (health > healthMax) {
+            health = healthMax;
+        }
     }
 
     public String getName() {
@@ -201,7 +232,6 @@ public abstract class Entity {
               }
          }
          this.equipment.put(place, item);
-         removeItemFromStorage(item);
          HashMap<String, String> result = new HashMap<String, String>();
          switch (item.getItemID().charAt(0)) {
               case 'w': {
@@ -247,7 +277,6 @@ public abstract class Entity {
          if (!place.isEmpty()) {
               this.equipment.put(place, new Item("empty"));
          }
-         addItemToStorage(item);
          HashMap<String, String> result = new HashMap<String, String>();
          if (item.propertiesContainsKey("damage")) {
             this.weapon = "hands";   
